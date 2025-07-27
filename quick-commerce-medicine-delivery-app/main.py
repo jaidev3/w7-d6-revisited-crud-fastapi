@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, status, File, UploadFile, Query
 from fastapi.security import HTTPBearer
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import os
@@ -23,11 +24,48 @@ from security import (
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
+# Environment configuration
+ENV = os.getenv("ENVIRONMENT", "development")
+DEBUG = ENV != "production"
+
 app = FastAPI(
     title="Quick Commerce Medicine Delivery API",
     description="A comprehensive medicine delivery platform with quick commerce features",
-    version="1.0.0"
+    version="1.0.0",
+    debug=DEBUG
 )
+
+# CORS middleware for production
+if ENV == "production":
+    # Configure CORS for production
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],  # Configure specific origins in production
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+# Health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "environment": ENV
+    }
+
+# Root endpoint
+@app.get("/")
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "message": "Quick Commerce Medicine Delivery API",
+        "version": "1.0.0",
+        "environment": ENV,
+        "docs": "/docs"
+    }
 
 # Authentication endpoints
 @app.post("/auth/register", response_model=schemas.Token)

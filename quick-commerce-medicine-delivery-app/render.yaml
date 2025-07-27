@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: medicine-delivery-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "1440"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medicine-delivery-db
+          property: connectionString
+    healthCheckPath: /health
+
+  - type: pserv
+    name: medicine-delivery-db
+    env: postgresql
+    plan: starter
+    region: oregon
+    databaseName: medicine_delivery
+    databaseUser: medicine_user 

@@ -1,16 +1,30 @@
+# Core FastAPI and server dependencies
 fastapi
-uvicorn
+uvicorn[standard]
+gunicorn
+
+# Database dependencies
 sqlalchemy
+psycopg2-binary  # PostgreSQL adapter for production
+alembic  # Database migrations
+
+# Authentication and security
 pydantic
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
+
+# File handling and validation
 pillow
-streamlit
-requests
+email-validator
 python-dateutil
 typing-extensions
-email-validator
+
+# Geolocation services
 geopy
+
+# Optional: Streamlit for admin dashboard (not needed for production API)
+streamlit
+requests
 folium
 streamlit-folium

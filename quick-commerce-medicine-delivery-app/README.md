@@ -1,290 +1,219 @@
-# 💊 QuickMed - Medicine Delivery Platform
+# Quick Commerce Medicine Delivery API
 
-A comprehensive quick commerce medicine delivery application built with FastAPI backend and Streamlit frontend, featuring user authentication, medicine catalog management, prescription handling, and rapid delivery functionality.
+A comprehensive FastAPI-based medicine delivery platform with quick commerce features, user authentication, prescription management, and real-time order tracking.
 
-## 🌟 Features
+## 🚀 Quick Start
 
-### 🔐 Authentication & User Management
-- User registration with medical profiles
-- Role-based access control (Customer, Pharmacist, Admin, Delivery Partner)
-- Phone number verification for delivery
-- Profile management with delivery addresses
-- Medical conditions and allergy tracking
+### Local Development
 
-### 💊 Medicine Catalog
-- Comprehensive medicine database with categories
-- Advanced search and filtering
-- Stock management and pricing
-- Alternative medicine suggestions
-- Prescription requirement validation
-- Quick delivery availability tracking
+1. **Clone and Setup**
+   ```bash
+   git clone <repository-url>
+   cd quick-commerce-medicine-delivery-app
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
 
-### 📋 Prescription Management
-- Prescription image upload
-- Pharmacist verification system
-- Valid prescription tracking
-- Prescription-based medicine ordering
+2. **Run the Application**
+   ```bash
+   uvicorn main:app --reload
+   ```
 
-### 🛒 Shopping Cart & Orders
-- Smart cart with prescription validation
-- Multiple delivery urgency options (Standard/Express/Emergency)
-- Real-time order tracking
-- Delivery partner assignment
-- Order history and management
+3. **Access the API**
+   - API Documentation: http://localhost:8000/docs
+   - Alternative Docs: http://localhost:8000/redoc
+   - Admin Dashboard: `streamlit run streamlit_app.py`
 
-### 🚚 Quick Commerce Features
-- **10-30 minute delivery promise**
-- Real-time inventory tracking
-- Dynamic pricing based on urgency
-- Location-based medicine availability
-- Emergency delivery requests
-- Nearby pharmacy finder
+### Production Deployment
 
-### ♿ Accessibility Features
-- High contrast mode
-- Large text support
-- Screen reader compatibility
-- Elderly-friendly interface
-- Voice guidance support
+This application is configured for easy deployment to **Render**. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-## 🏗️ Architecture
+#### Quick Deploy to Render
+1. Push code to GitHub
+2. Connect repository to Render
+3. Use the included `render.yaml` for automatic deployment
+4. Set required environment variables
 
-### Backend (FastAPI)
-- **Database**: SQLite with SQLAlchemy ORM
-- **Authentication**: JWT tokens with role-based access
-- **Security**: Password hashing, input validation
-- **API Documentation**: Auto-generated OpenAPI/Swagger docs
+## 📋 Features
 
-### Frontend (Streamlit)
-- **Modern UI**: Responsive design with accessibility features
-- **Real-time Updates**: Live order tracking and cart updates
-- **Maps Integration**: Delivery tracking with Folium
+### Core Functionality
+- **User Management**: Registration, authentication, profile management
+- **Medicine Catalog**: Browse, search, and filter medicines
+- **Prescription Handling**: Upload and manage prescriptions
+- **Order Management**: Place orders, track delivery, payment processing
+- **Real-time Tracking**: Live order and delivery tracking
+- **Multi-user Roles**: Customers, pharmacists, delivery partners, admins
+
+### Technical Features
+- **FastAPI Framework**: High-performance async API
+- **SQLAlchemy ORM**: Database abstraction and migrations
+- **JWT Authentication**: Secure token-based authentication
 - **File Upload**: Prescription image handling
+- **Geolocation**: Distance calculation and routing
+- **Health Monitoring**: Built-in health checks
+
+## 🛠 Technology Stack
+
+- **Backend**: FastAPI, Python 3.11+
+- **Database**: SQLite (development), PostgreSQL (production)
+- **Authentication**: JWT tokens with bcrypt hashing
+- **File Storage**: Local filesystem with upload management
+- **Frontend**: Streamlit admin dashboard
+- **Deployment**: Render with automatic scaling
 
 ## 📁 Project Structure
 
 ```
 quick-commerce-medicine-delivery-app/
-├── main.py                 # FastAPI application with all endpoints
-├── streamlit_app.py        # Streamlit UI application
-├── models.py              # Database models (SQLAlchemy)
-├── schemas.py             # Pydantic schemas for API
-├── crud.py                # Database operations
-├── auth.py                # Authentication dependencies
-├── security.py            # Security utilities (JWT, hashing)
-├── database.py            # Database configuration
-├── sample_data.py         # Sample data creation script
-├── requirements.txt       # Python dependencies
-├── README.md             # Project documentation
-└── uploads/              # Prescription image uploads (created automatically)
+├── main.py              # FastAPI application entry point
+├── models.py            # SQLAlchemy database models
+├── schemas.py           # Pydantic data validation schemas
+├── crud.py              # Database operations
+├── auth.py              # Authentication logic
+├── security.py          # Security utilities
+├── database.py          # Database configuration
+├── sample_data.py       # Sample data for testing
+├── streamlit_app.py     # Admin dashboard
+├── requirements.txt     # Python dependencies
+├── render.yaml          # Render deployment config
+├── Procfile            # Alternative deployment config
+├── runtime.txt         # Python version specification
+├── migrate_db.py       # Database migration script
+├── env.example         # Environment variables template
+├── DEPLOYMENT.md       # Deployment guide
+└── uploads/            # File upload directory
+    └── prescriptions/  # Prescription images
 ```
-
-## 🚀 Quick Start
-
-### 1. Prerequisites
-- Python 3.8+
-- pip (Python package manager)
-
-### 2. Installation
-
-```bash
-# Clone or navigate to the project directory
-cd quick-commerce-medicine-delivery-app
-
-# Activate virtual environment (if using venv)
-source ../venv/bin/activate  # On Windows: ..\venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Create sample data (or run the setup script)
-python sample_data.py
-# OR run the automated setup script:
-python setup.py
-```
-
-### 3. Run the Application
-
-```bash
-# Make sure virtual environment is activated
-source ../venv/bin/activate  # On Windows: ..\venv\Scripts\activate
-
-# Terminal 1: Start FastAPI backend
-python main.py
-# API will be available at http://localhost:8000
-# API docs at http://localhost:8000/docs
-
-# Terminal 2: Start Streamlit frontend (in new terminal with venv activated)
-streamlit run streamlit_app.py
-# UI will be available at http://localhost:8501
-```
-
-## 👥 Test Accounts
-
-After running `sample_data.py`, you can use these test accounts:
-
-| Role | Email | Password | Description |
-|------|-------|----------|-------------|
-| **Customer** | customer@example.com | password123 | Regular user account |
-| **Pharmacist** | pharmacist@example.com | pharmacist123 | Can verify prescriptions |
-| **Admin** | admin@example.com | admin123 | Pharmacy admin with full access |
-| **Delivery** | delivery@example.com | delivery123 | Delivery partner account |
-
-## 📚 API Endpoints
-
-### Authentication
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - User login
-- `GET /auth/me` - Get current user profile
-- `PUT /auth/profile` - Update user profile
-- `POST /auth/verify-phone` - Verify phone number
-
-### Medicine Management
-- `GET /medicines` - Browse medicines with search/filter
-- `POST /medicines` - Add new medicine (admin only)
-- `PUT /medicines/{id}` - Update medicine (admin only)
-- `DELETE /medicines/{id}` - Remove medicine (admin only)
-- `GET /medicines/{id}/alternatives` - Get alternative medicines
-- `PATCH /medicines/{id}/stock` - Update stock levels
-
-### Categories
-- `GET /categories` - Get all categories
-- `POST /categories` - Create category (admin only)
-- `PUT /categories/{id}` - Update category (admin only)
-- `DELETE /categories/{id}` - Delete category (admin only)
-
-### Prescriptions
-- `POST /prescriptions/upload` - Upload prescription image
-- `GET /prescriptions` - Get user's prescriptions
-- `GET /prescriptions/{id}` - Get prescription details
-- `PUT /prescriptions/{id}/verify` - Verify prescription (pharmacist only)
-- `GET /prescriptions/{id}/medicines` - Get prescription medicines
-
-### Shopping Cart
-- `GET /cart` - Get user's cart
-- `POST /cart/items` - Add medicine to cart
-- `PUT /cart/items/{id}` - Update cart item quantity
-- `DELETE /cart/items/{id}` - Remove from cart
-- `DELETE /cart` - Clear entire cart
-
-### Orders & Delivery
-- `POST /orders` - Create order from cart
-- `GET /orders` - Get user's orders
-- `GET /orders/{id}` - Get order details
-- `PATCH /orders/{id}/status` - Update order status
-- `GET /delivery/estimate` - Get delivery estimate
-- `GET /nearby-pharmacies` - Find nearby pharmacies
-
-## 🎯 Key Features Walkthrough
-
-### 1. Quick Commerce Shopping Experience
-1. **Browse Medicines**: Search by name, category, or condition
-2. **Smart Filtering**: Filter by prescription requirement, price, delivery time
-3. **Add to Cart**: Automatic prescription validation
-4. **Quick Checkout**: Choose delivery urgency (10-30 mins)
-5. **Real-time Tracking**: Live order and delivery tracking
-
-### 2. Prescription Management
-1. **Upload Prescription**: Take photo of doctor's prescription
-2. **Pharmacist Verification**: Licensed pharmacist reviews and approves
-3. **Smart Cart Integration**: Prescription medicines auto-linked to cart
-4. **Validity Tracking**: Monitor prescription expiration dates
-
-### 3. Emergency Delivery
-1. **Emergency Mode**: 10-minute delivery for urgent needs
-2. **Priority Processing**: Fast-track through pharmacy preparation
-3. **Dedicated Partners**: Emergency delivery partner network
-4. **Real-time Communication**: Direct contact with delivery partner
-
-### 4. Accessibility Features
-1. **Visual Aids**: High contrast mode, large text options
-2. **Navigation**: Keyboard-friendly interface
-3. **Clear Communication**: Simple language, clear instructions
-4. **Emergency Support**: Quick access to emergency contacts
 
 ## 🔧 Configuration
 
 ### Environment Variables
-Create a `.env` file for production deployment:
 
-```env
-SECRET_KEY=your-super-secret-key-change-this-in-production
-DATABASE_URL=sqlite:///./medicine_delivery.db
+Copy `env.example` to `.env` and configure:
+
+```bash
+# Required for production
+ENVIRONMENT=production
+SECRET_KEY=your-secure-secret-key
+DATABASE_URL=postgresql://user:pass@host:port/db
+
+# Optional
 ACCESS_TOKEN_EXPIRE_MINUTES=1440
-API_BASE_URL=http://localhost:8000
+MAX_FILE_SIZE=10485760
 ```
 
-### Database Configuration
-The application uses SQLite by default. For production, update `database.py`:
+### Database Setup
 
-```python
-DATABASE_URL = "postgresql://user:password@localhost/dbname"
-# or
-DATABASE_URL = "mysql://user:password@localhost/dbname"
+**Development (SQLite)**:
+```bash
+python sample_data.py  # Create sample data
 ```
 
-## 📱 Mobile Responsiveness
-
-The Streamlit interface is optimized for mobile devices with:
-- Touch-friendly buttons and controls
-- Responsive grid layouts
-- Mobile-optimized forms
-- Swipe-friendly navigation
-
-## 🔒 Security Features
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **Role-based Access**: Different permissions for different user types
-- **Input Validation**: Comprehensive data validation
-- **File Upload Security**: Secure prescription image handling
-
-## 🚀 Deployment
-
-### Docker Deployment (Recommended)
-
-```dockerfile
-FROM python:3.9-slim
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-COPY . .
-
-EXPOSE 8000 8501
-
-CMD ["sh", "-c", "python main.py & streamlit run streamlit_app.py --server.address=0.0.0.0"]
+**Production (PostgreSQL)**:
+```bash
+python migrate_db.py   # Run migrations
+python sample_data.py  # Optional: Load sample data
 ```
 
-### Cloud Deployment
-- **Backend**: Deploy FastAPI on Heroku, AWS, or Google Cloud
-- **Frontend**: Deploy Streamlit on Streamlit Cloud or any cloud provider
-- **Database**: Use PostgreSQL or MySQL for production
+## 📊 API Endpoints
+
+### Authentication
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User login
+- `POST /auth/refresh` - Refresh token
+
+### User Management
+- `GET /users/profile` - Get user profile
+- `PUT /users/profile` - Update profile
+- `POST /users/medical-profile` - Add medical info
+
+### Medicine & Pharmacy
+- `GET /medicines` - Browse medicines
+- `GET /pharmacies` - Find pharmacies
+- `GET /inventory` - Check medicine availability
+
+### Orders & Delivery
+- `POST /orders` - Place order
+- `GET /orders/{id}` - Track order
+- `POST /prescriptions` - Upload prescription
+- `GET /deliveries/{id}` - Track delivery
+
+### Admin Functions
+- `GET /admin/dashboard` - Admin overview
+- `GET /admin/users` - Manage users
+- `GET /admin/orders` - Manage orders
 
 ## 🧪 Testing
 
 ### API Testing
-Access the interactive API documentation at `http://localhost:8000/docs` to test all endpoints.
+```bash
+# Run test script
+python test_api.py
 
-### Sample Workflows
+# Manual testing with curl
+curl -X GET "http://localhost:8000/health"
+curl -X GET "http://localhost:8000/docs"
+```
 
-1. **Customer Journey**:
-   - Register → Verify Phone → Upload Prescription → Browse Medicines → Add to Cart → Place Order → Track Delivery
+### Load Testing
+```bash
+# Install testing tools
+pip install pytest httpx
 
-2. **Pharmacist Workflow**:
-   - Login → Review Prescriptions → Verify/Reject → Update Stock → Monitor Orders
+# Run tests
+pytest test_*.py
+```
 
-3. **Admin Tasks**:
-   - Manage Medicine Catalog → Add Categories → Update Pricing → Monitor System
+## 🔒 Security Features
+
+- **JWT Authentication**: Secure token-based auth
+- **Password Hashing**: bcrypt for password security
+- **Role-based Access**: Different permissions per user type
+- **Input Validation**: Pydantic schema validation
+- **File Upload Security**: Type and size validation
+- **CORS Configuration**: Configurable cross-origin requests
+
+## 📈 Monitoring & Maintenance
+
+### Health Checks
+- `GET /health` - Application health status
+- Database connection monitoring
+- Automatic error logging
+
+### Performance
+- Gunicorn with multiple workers
+- Database connection pooling
+- Async request handling
+- Optimized query patterns
+
+## 🚀 Production Deployment
+
+### Render (Recommended)
+1. Follow the [DEPLOYMENT.md](DEPLOYMENT.md) guide
+2. Use included `render.yaml` configuration
+3. Set environment variables
+4. Deploy with one click
+
+### Manual Deployment
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python migrate_db.py
+
+# Start application
+gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
 ## 📄 License
 
@@ -292,17 +221,22 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🆘 Support
 
-For support and questions:
-- Create an issue in the repository
-- Contact: support@quickmed.com
-- Emergency: +91 9876543210
+- **Documentation**: Check `/docs` endpoint for API documentation
+- **Issues**: Create GitHub issues for bugs or feature requests
+- **Deployment Help**: See [DEPLOYMENT.md](DEPLOYMENT.md) for deployment guides
 
-## 🌟 Acknowledgments
+## 🔄 Recent Updates
 
-- Built with FastAPI and Streamlit
-- Icons from Unicode Emoji
-- Maps powered by Folium
-- Designed for accessibility and ease of use
+- ✅ Production deployment configuration
+- ✅ PostgreSQL support for production
+- ✅ Environment variable configuration
+- ✅ Health monitoring endpoints
+- ✅ Automated database migrations
+- ✅ Render deployment templates
+
+---
+
+**Ready to deploy?** Follow the [DEPLOYMENT.md](DEPLOYMENT.md) guide for step-by-step deployment instructions.
 
 ---
 
