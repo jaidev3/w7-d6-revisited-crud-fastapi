@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+pydantic[email]
+python-multipart
+streamlit
+streamlit-option-menu
+pandas
+plotly
+python-dateutil
