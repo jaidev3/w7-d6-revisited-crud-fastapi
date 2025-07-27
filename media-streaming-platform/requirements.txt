@@ -1,0 +1,15 @@
+# Media Streaming Platform Requirements
+# No external dependencies required - uses Python standard library only
+
+# Python 3.8+ is required for:
+# - typing.List, typing.Dict, typing.Optional
+# - abc.ABC and @abstractmethod
+# - enum.Enum
+# - datetime and timedelta
+# - statistics module
+
+# For development and testing (optional):
+# pytest>=7.0.0
+# black>=22.0.0
+# flake8>=4.0.0
+# mypy>=0.950 
