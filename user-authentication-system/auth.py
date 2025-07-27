@@ -11,8 +11,10 @@ from schemas import TokenData
 
 # Security configuration
 SECRET_KEY = "your-secret-key-change-in-production"  # Change this in production
+REFRESH_SECRET_KEY = "your-refresh-secret-key-change-in-production"  # Separate key for refresh tokens
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+REFRESH_TOKEN_EXPIRE_DAYS = 7
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
@@ -33,23 +35,54 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     else:
         expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire})
+    to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-def verify_token(token: str) -> TokenData:
+def create_refresh_token(data: dict) -> str:
+    """Create a JWT refresh token"""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, REFRESH_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+def verify_token(token: str, token_type: str = "access") -> TokenData:
     """Verify and decode a JWT token"""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        # Check if token is blacklisted
+        from security import TokenBlacklist
+        if TokenBlacklist.is_blacklisted(token):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has been revoked",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Choose the appropriate secret key
+        secret_key = SECRET_KEY if token_type == "access" else REFRESH_SECRET_KEY
+        
+        payload = jwt.decode(token, secret_key, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
+        token_type_claim: str = payload.get("type")
+        
         if username is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        token_data = TokenData(username=username)
+        
+        if token_type_claim != token_type:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        token_data = TokenData(username=username, token_type=token_type)
         return token_data
+        
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,13 +90,24 @@ def verify_token(token: str) -> TokenData:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+def get_token_expiry(token: str) -> Optional[datetime]:
+    """Get token expiry time"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_signature": False})
+        exp_timestamp = payload.get("exp")
+        if exp_timestamp:
+            return datetime.utcfromtimestamp(exp_timestamp)
+    except JWTError:
+        pass
+    return None
+
 def get_user_by_username(db: Session, username: str) -> Optional[User]:
     """Get user by username"""
     return db.query(User).filter(User.username == username).first()
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)) -> User:
     """Get current authenticated user"""
-    token_data = verify_token(credentials.credentials)
+    token_data = verify_token(credentials.credentials, "access")
     user = get_user_by_username(db, username=token_data.username)
     if user is None:
         raise HTTPException(
@@ -86,4 +130,11 @@ def require_admin(current_user: User = Depends(get_current_active_user)) -> User
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
         )
-    return current_user 
+    return current_user
+
+def invalidate_token(token: str):
+    """Add token to blacklist"""
+    from security import TokenBlacklist
+    expiry = get_token_expiry(token)
+    if expiry:
+        TokenBlacklist.add_token(token, expiry) 

@@ -1,264 +1,353 @@
-# User Authentication System
+# User Authentication System - Phase 2
 
-A secure user authentication system built with FastAPI, featuring JWT tokens and role-based access control.
+Enhanced secure user authentication system with JWT tokens, comprehensive security measures, rate limiting, and advanced features.
 
-## Features
+## 🚀 Features
 
-### 🔐 Authentication & Security
-- **Password Hashing**: Secure bcrypt password hashing
-- **JWT Tokens**: Stateless authentication with 30-minute expiration
-- **Role-based Access Control**: USER and ADMIN roles
-- **Password Validation**: Minimum 8 characters with special characters required
-- **Duplicate Prevention**: Username and email uniqueness enforcement
+### Core Authentication
+- JWT-based authentication with access and refresh tokens
+- Role-based access control (User, Admin)
+- Secure password hashing with bcrypt
+- User registration and login with validation
 
-### 🛡️ Security Features
-- Secure password storage with bcrypt
-- JWT token validation and expiration
-- Protected routes with dependency injection
-- Admin-only endpoints with role verification
-- Proper error handling for authentication failures
-- User role included in JWT payload
+### Phase 2 Security Enhancements
+- **Rate Limiting**: Different limits for sensitive endpoints
+  - Login attempts: 5 per minute per IP
+  - Registration: 3 per minute per IP
+  - Password reset: 1 per minute per IP
+  - General API: 100 per minute per IP
+- **Input Sanitization**: Clean and validate all user inputs
+- **CORS Configuration**: Proper cross-origin policies
+- **Security Headers**: HTTPS, HSTS, and other security headers
+- **Token Blacklisting**: Invalidate tokens on logout
+- **Error Handling**: Custom exception handlers with proper HTTP codes
 
-## API Endpoints
+### New Endpoints
+- `POST /auth/refresh` - Refresh JWT token
+- `POST /auth/logout` - Logout user (invalidate token)
+- `POST /auth/forgot-password` - Password reset request
+- `GET /health` - Enhanced health check endpoint
+
+## 📋 Requirements
+
+- Python 3.8+
+- FastAPI
+- SQLAlchemy
+- Redis (optional, for enhanced token management)
+- Other dependencies listed in requirements.txt
+
+## 🛠️ Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd user-authentication-system
+   ```
+
+2. **Create virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Optional: Setup Redis (for enhanced security features)**
+   ```bash
+   # On macOS
+   brew install redis
+   brew services start redis
+   
+   # On Ubuntu/Debian
+   sudo apt update
+   sudo apt install redis-server
+   sudo systemctl start redis-server
+   
+   # On Windows (using WSL or Docker)
+   docker run -d -p 6379:6379 redis:alpine
+   ```
+
+5. **Run the application**
+   ```bash
+   python main.py
+   ```
+
+   Or using uvicorn directly:
+   ```bash
+   uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+## 🔧 Configuration
+
+### Environment Variables (Optional)
+Create a `.env` file in the project root:
+
+```env
+SECRET_KEY=your-super-secret-key-change-in-production
+REFRESH_SECRET_KEY=your-refresh-secret-key-change-in-production
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+REDIS_URL=redis://localhost:6379/0
+DATABASE_URL=sqlite:///./user_auth.db
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com
+```
+
+### Security Settings
+- Change the `SECRET_KEY` and `REFRESH_SECRET_KEY` in production
+- Configure allowed hosts for your domain
+- Set up HTTPS in production
+- Configure Redis for production token management
+
+## 📚 API Documentation
+
+Once the server is running, visit:
+- **Interactive API Documentation**: http://localhost:8000/docs
+- **Alternative Documentation**: http://localhost:8000/redoc
 
 ### Authentication Endpoints
 
-#### POST `/auth/register`
-Register a new user with password validation.
+#### Register User
+```http
+POST /auth/register
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-    "username": "johndoe",
-    "email": "john@example.com",
-    "password": "SecurePass123!"
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "SecurePass123!"
 }
 ```
 
-**Response (201):**
-```json
+#### Login
+```http
+POST /auth/login
+Content-Type: application/json
+
 {
-    "id": 1,
-    "username": "johndoe",
-    "email": "john@example.com",
-    "role": "user",
-    "is_active": true,
-    "created_at": "2024-01-01T12:00:00Z"
+  "username": "testuser",
+  "password": "SecurePass123!"
 }
 ```
 
-#### POST `/auth/login`
-Login user and receive JWT token.
-
-**Request Body:**
+Response:
 ```json
 {
-    "username": "johndoe",
-    "password": "SecurePass123!"
+  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "token_type": "bearer",
+  "expires_in": 1800,
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 }
 ```
 
-**Response (200):**
-```json
+#### Refresh Token
+```http
+POST /auth/refresh
+Content-Type: application/json
+
 {
-    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "token_type": "bearer"
+  "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
 }
 ```
 
-#### GET `/auth/me`
-Get current user information (requires authentication).
+#### Logout
+```http
+POST /auth/logout
+Authorization: Bearer <access_token>
+Content-Type: application/json
 
-**Headers:**
-```
-Authorization: Bearer <your-jwt-token>
-```
-
-**Response (200):**
-```json
 {
-    "id": 1,
-    "username": "johndoe",
-    "email": "john@example.com",
-    "role": "user",
-    "is_active": true,
-    "created_at": "2024-01-01T12:00:00Z"
+  "token": "optional_token_to_invalidate"
 }
 ```
 
-### User Management Endpoints (Admin Only)
+#### Forgot Password
+```http
+POST /auth/forgot-password
+Content-Type: application/json
 
-#### GET `/users`
-Get all users with pagination (admin only).
-
-**Query Parameters:**
-- `skip`: Number of records to skip (default: 0)
-- `limit`: Maximum number of records to return (default: 100)
-
-**Headers:**
-```
-Authorization: Bearer <admin-jwt-token>
-```
-
-#### PUT `/users/{user_id}/role`
-Change user role (admin only).
-
-**Request Body:**
-```json
 {
-    "role": "admin"
+  "email": "test@example.com"
 }
 ```
 
-#### DELETE `/users/{user_id}`
-Delete a user (admin only).
+#### Get Current User
+```http
+GET /auth/me
+Authorization: Bearer <access_token>
+```
 
-**Response:** 204 No Content
+### Admin Endpoints
 
-## Setup and Installation
+#### Get All Users (Admin Only)
+```http
+GET /users?skip=0&limit=100
+Authorization: Bearer <admin_access_token>
+```
 
-### Prerequisites
-- Python 3.8+
-- pip
+#### Update User Role (Admin Only)
+```http
+PUT /users/{user_id}/role
+Authorization: Bearer <admin_access_token>
+Content-Type: application/json
 
-### Installation Steps
+{
+  "role": "ADMIN"
+}
+```
 
-1. **Clone or navigate to the project directory:**
+#### Delete User (Admin Only)
+```http
+DELETE /users/{user_id}
+Authorization: Bearer <admin_access_token>
+```
+
+### Health Check
+```http
+GET /health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T12:00:00.000Z",
+  "version": "2.0.0",
+  "database_status": "healthy",
+  "redis_status": "healthy"
+}
+```
+
+## 🛡️ Security Features
+
+### Rate Limiting
+The API implements rate limiting with the following rules:
+- **Login**: 5 attempts per minute per IP
+- **Registration**: 3 attempts per minute per IP
+- **Password Reset**: 1 attempt per minute per IP
+- **General API**: 100 requests per minute per IP
+
+### Input Validation
+- Username: 3-50 characters, alphanumeric with underscores and hyphens
+- Password: 8-128 characters with uppercase, lowercase, digit, and special character
+- Email: Valid email format with sanitization
+
+### Security Headers
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options: DENY`
+- `X-XSS-Protection: 1; mode=block`
+- `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- `Content-Security-Policy: default-src 'self'`
+- `Referrer-Policy: strict-origin-when-cross-origin`
+
+### Token Management
+- Access tokens expire in 30 minutes
+- Refresh tokens expire in 7 days
+- Token blacklisting on logout
+- Separate secret keys for access and refresh tokens
+
+## 🧪 Testing
+
+### Create Admin User
 ```bash
-cd user-authentication-system
+python create_admin.py
 ```
 
-2. **Create a virtual environment:**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. **Install dependencies:**
-```bash
-pip install -r requirements.txt
-```
-
-4. **Run the application:**
-```bash
-python main.py
-```
-
-The API will be available at `http://localhost:8000`
-
-### API Documentation
-Once running, visit:
-- **Interactive API docs:** `http://localhost:8000/docs`
-- **ReDoc documentation:** `http://localhost:8000/redoc`
-
-## Testing
-
-### Automated Testing
-Run the comprehensive test suite:
+### Run API Tests
 ```bash
 python test_api.py
 ```
 
-This will test:
-- User registration with password validation
-- User login and JWT token generation
-- Protected route access
-- Admin-only operations
-- Unauthorized access attempts
-- Invalid credentials handling
+### Manual Testing Examples
 
-### Manual Testing with curl
+1. **Register a new user**:
+   ```bash
+   curl -X POST "http://localhost:8000/auth/register" \
+        -H "Content-Type: application/json" \
+        -d '{"username": "testuser", "email": "test@example.com", "password": "SecurePass123!"}'
+   ```
 
-#### Register a new user:
-```bash
-curl -X POST "http://localhost:8000/auth/register" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "username": "testuser",
-       "email": "test@example.com",
-       "password": "SecurePass123!"
-     }'
+2. **Login**:
+   ```bash
+   curl -X POST "http://localhost:8000/auth/login" \
+        -H "Content-Type: application/json" \
+        -d '{"username": "testuser", "password": "SecurePass123!"}'
+   ```
+
+3. **Access protected endpoint**:
+   ```bash
+   curl -X GET "http://localhost:8000/auth/me" \
+        -H "Authorization: Bearer <your_access_token>"
+   ```
+
+## 🚀 Production Deployment
+
+### Security Checklist
+- [ ] Change default secret keys
+- [ ] Set up HTTPS with SSL certificates
+- [ ] Configure proper CORS origins
+- [ ] Set up Redis for production
+- [ ] Configure proper database (PostgreSQL recommended)
+- [ ] Set up monitoring and logging
+- [ ] Configure firewall rules
+- [ ] Set up rate limiting at reverse proxy level
+- [ ] Enable database connection pooling
+- [ ] Set up automated backups
+
+### Docker Deployment (Optional)
+```dockerfile
+# Example Dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+EXPOSE 8000
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-#### Login:
-```bash
-curl -X POST "http://localhost:8000/auth/login" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "username": "testuser",
-       "password": "SecurePass123!"
-     }'
-```
+## 🐛 Troubleshooting
 
-#### Access protected route:
-```bash
-curl -X GET "http://localhost:8000/auth/me" \
-     -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
-```
+### Common Issues
 
-## Security Considerations
+1. **Redis Connection Error**:
+   - The system works without Redis but with reduced functionality
+   - Install and start Redis server for full features
 
-### Password Requirements
-- Minimum 8 characters
-- Must contain at least one special character
-- Hashed using bcrypt before storage
+2. **Rate Limiting Not Working**:
+   - Check if slowapi is installed: `pip install slowapi`
+   - Ensure Redis is running for persistent rate limiting
 
-### JWT Configuration
-- 30-minute token expiration
-- Includes user role in payload
-- Uses HS256 algorithm
-- **Important:** Change the `SECRET_KEY` in `auth.py` for production
+3. **CORS Issues**:
+   - Update allowed origins in main.py
+   - Check browser console for CORS errors
 
-### Role-based Access
-- **USER**: Can access `/auth/me` endpoint
-- **ADMIN**: Can access all user management endpoints
+4. **Token Errors**:
+   - Ensure tokens are included in Authorization header
+   - Check token expiry times
+   - Verify secret keys are consistent
 
-## Project Structure
+## 📄 License
 
-```
-user-authentication-system/
-├── main.py              # FastAPI application and route definitions
-├── models.py            # SQLAlchemy database models
-├── schemas.py           # Pydantic request/response schemas
-├── database.py          # Database configuration and session management
-├── auth.py              # Authentication utilities and JWT handling
-├── crud.py              # Database operations
-├── test_api.py          # Comprehensive API tests
-├── requirements.txt     # Python dependencies
-└── README.md           # This file
-```
+This project is licensed under the MIT License.
 
-## Error Handling
+## 🤝 Contributing
 
-The API provides detailed error messages for various scenarios:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-- **400 Bad Request**: Invalid input, duplicate username/email, weak password
-- **401 Unauthorized**: Invalid credentials, missing/invalid token
-- **403 Forbidden**: Insufficient permissions (non-admin accessing admin routes)
-- **404 Not Found**: User not found
-- **500 Internal Server Error**: Server-side errors
+## 📞 Support
 
-## Production Deployment
-
-### Before deploying to production:
-
-1. **Change the secret key** in `auth.py`:
-```python
-SECRET_KEY = "your-secure-production-secret-key"
-```
-
-2. **Use environment variables** for sensitive configuration
-3. **Use a production database** (PostgreSQL, MySQL)
-4. **Enable HTTPS** for secure token transmission
-5. **Configure proper CORS** settings
-6. **Set up monitoring** and logging
-
-### Environment Variables
-Consider using these environment variables:
-- `SECRET_KEY`: JWT secret key
-- `DATABASE_URL`: Database connection string
-- `ACCESS_TOKEN_EXPIRE_MINUTES`: Token expiration time
-
-## License
-
-This project is provided as an educational example for secure user authentication with FastAPI. 
+For issues and questions:
+- Check the API documentation at `/docs`
+- Review this README
+- Check the troubleshooting section
+- Open an issue on the repository 

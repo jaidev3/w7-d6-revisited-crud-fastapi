@@ -9,3 +9,7 @@ pydantic
 python-dotenv
 requests
 email-validator
+slowapi
+redis
+bleach
+starlette
